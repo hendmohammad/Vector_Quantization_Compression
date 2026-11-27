@@ -128,7 +128,7 @@ def calculate_compression_ratio(image, block_height ,  block_width, codebook_siz
 
         number_of_blocks = original_size // (block_height * block_width)
 
-        number_of_bits = max(1, math.ceil(math.log2(codebook_size)))
+        number_of_bits = max(1, ceil(log2(codebook_size)))
 
         label_size = number_of_bits * number_of_blocks
 
