@@ -3,16 +3,14 @@ from math import *
 
 
 
-def divide_image_into_blocks(image, block_size):
+def divide_image_into_blocks(image, block_height , block_width):
     # image into blocks
     image_array = np.array(image)  # image now is a 2D array (rows and columns)
     blocks = []
     height, width = image_array.shape  # image_array.shape returns a tuple first is the height and the second is the width
-    block_size = int(round(sqrt(block_size))) # if the block_size not perfect square so we need to round it
-    #without round : blocksize = 24 =>int(sqrt(blocksize)= 4 , but with round =>int(round(sqrt(blocksize))) = 5
-    for row in range(0, height, block_size):  # iterate on the rows
-        for col in range(0, width, block_size):  # iterate on the columns
-            block = image_array[row: row + block_size, col: col + block_size]  # beginning : end
+    for row in range(0, height, block_height):  # iterate on the rows
+        for col in range(0, width, block_width):  # iterate on the columns
+            block = image_array[row: row + block_height, col: col + block_width]  # beginning : end
             # this means that we slice the image into small blocks  for example(2*2)
             blocks.append(block)  # append each block in the 3D list blocks
             # note that this line is in the second loop which means that the blocks stored horizontally means the shape will be(num of blocks , block size , block size)
@@ -79,9 +77,9 @@ def update_groups(codebook,blocks):  # blocks are all the vectors of the image, 
     return new_codebook
 
 
-def gen_codebook(image, block_size, codebook_size):
+def gen_codebook(image, block_height , block_width, codebook_size):
     # 1) divide image into blocks
-    blocks = divide_image_into_blocks(image, block_size)
+    blocks = divide_image_into_blocks(image, block_height , block_width)
     if codebook_size > len(blocks):
         raise ValueError('codebook_size can not be larger than number of blocks! Try smaller value.')
 
@@ -113,8 +111,8 @@ def gen_codebook(image, block_size, codebook_size):
     return codebook
 
 #encoding: find distance between the block and each centroid to can assign its index which will be converted to binary in the compressed image
-def encoding(image , block_size , codebook):
-    blocks = divide_image_into_blocks(image, block_size)
+def encoding(image , block_height , block_width , codebook):
+    blocks = divide_image_into_blocks(image, block_height , block_width)
     indices = []
     for block in blocks:
         distances = []
@@ -125,10 +123,10 @@ def encoding(image , block_size , codebook):
 
     return indices
 
-def calculate_compression_ratio(image, block_size, codebook_size):
+def calculate_compression_ratio(image, block_height ,  block_width, codebook_size):
         original_size = image.size[0] * image.size[1]
 
-        number_of_blocks = original_size // block_size
+        number_of_blocks = original_size // (block_height * block_width)
 
         number_of_bits = max(1, ceil(log2(codebook_size)))
 

@@ -6,12 +6,12 @@ from PIL import Image
 
 def read_codebook(data):
     # data: bytes of codebook.bin -> list of centroids (side x side uint8 arrays)
-    count, side = struct.unpack("<HB", data[:3])
-    size = side * side
+    count, block_height, block_width = struct.unpack("<HBB", data[:4])
+    size = block_width * block_height
     codebook = []
-    pos = 3
+    pos = 4
     for _ in range(count):
-        centroid = np.frombuffer(data[pos:pos + size], dtype=np.uint8).reshape(side, side)
+        centroid = np.frombuffer(data[pos:pos + size], dtype=np.uint8).reshape(block_height, block_width)
         codebook.append(centroid)
         pos += size
     return codebook
@@ -38,21 +38,21 @@ def decode_indices(stream, bits_per_index, num_blocks):
 
 def reconstruct_image(indices, codebook, padded_size):
     pw, ph = padded_size
-    side = codebook[0].shape[0]
+    block_height , block_width = codebook[0].shape
     image_array = np.zeros((ph, pw), dtype=np.uint8)
-    blocks_per_row = pw // side
+    blocks_per_row = pw // block_width
     for k, index in enumerate(indices):
-        row = (k // blocks_per_row) * side  # blocks were stored left->right, top->bottom
-        col = (k % blocks_per_row) * side
-        image_array[row:row + side, col:col + side] = codebook[index]
+        row = (k // blocks_per_row) * block_height  # blocks were stored left->right, top->bottom
+        col = (k % blocks_per_row) * block_width
+        image_array[row:row + block_height, col:col + block_width] = codebook[index]
     return image_array
 
 
 def decompress(compressed_bytes, codebook_bytes):
     codebook = read_codebook(codebook_bytes)
     original_size, padded_size, bits_per_index, stream = read_compressed(compressed_bytes)
-    side = codebook[0].shape[0]
-    num_blocks = (padded_size[0] // side) * (padded_size[1] // side)
+    block_height , block_width = codebook[0].shape
+    num_blocks = (padded_size[0] // block_width) * (padded_size[1] // block_height)
     indices = decode_indices(stream, bits_per_index, num_blocks)
     image_array = reconstruct_image(indices, codebook, padded_size)
     image = Image.fromarray(image_array)

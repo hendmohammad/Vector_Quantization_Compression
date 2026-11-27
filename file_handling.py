@@ -7,19 +7,19 @@ from compression import *
 
 # The image must have dimensions that divided by block_size to can compress all pixels
 # , so we solve this problem using padding
-def check_padding(image , block_size): #if the image need padding implement it if not: do nothing
+def check_padding(image , block_height , block_width): #if the image need padding implement it if not: do nothing
     width, height = image.size
-    block_size = int(round(sqrt(block_size)))
-    if height % block_size != 0 or width % block_size != 0:
-        image = image_padding(image, block_size)
+
+    if height % block_height != 0 or width % block_width != 0:
+        image = image_padding(image, block_height , block_width)
 
     return image
 
 # padding logic :
-def image_padding(image, block_size):
+def image_padding(image, block_height , block_width):
     old_width, old_height = image.size
-    height_padding = (block_size - old_height % block_size) % block_size # calculate the number of pixels needed for height to be divided by block_size
-    width_padding = (block_size - old_width % block_size) % block_size  # calculate the number of pixels needed for width to be divided by block_size
+    height_padding = (block_height - old_height % block_height) % block_height # calculate the number of pixels needed for height to be divided by block_size
+    width_padding = (block_width - old_width % block_width) % block_width  # calculate the number of pixels needed for width to be divided by block_size
     image= np.array(image)
     padded_image_array  = np.pad(image, ((0 , height_padding), (0,width_padding)) , mode="edge") #datatype is nd.array
     # pad_width: ((padding to rows on  the top , padding rows on  the bottom) , (padding to columns on the left , padding to columns on the right))
@@ -38,12 +38,11 @@ def load_image(image_name):    #will be replaced after implementing the GUI
 
     if image.mode != "L":
         image = image.convert('L')
-    image= image.resize((512,512)) #for quick outputs , it will be deleted before submission as it has no effect on the logic
-    return image
+    return image.resize((512, 512))
 
 def write_codebook(codebook , file_name):
     with open(file_name , "wb") as file:
-        file.write(struct.pack("<HB" , len(codebook) , codebook[0].shape[0]))
+        file.write(struct.pack("<HBB" , len(codebook) , codebook[0].shape[0] , codebook[0].shape[1]))
         #codebook[0] means the first centroid  and shape[0] means the value of first dimension can be 1 also
         # it does not matter if it is the first centroid or not because they all have the same shape
         for centroid in codebook:
