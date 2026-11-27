@@ -1,7 +1,6 @@
 import numpy as np
 import math
 
-from numpy.ma.core import indices
 
 
 def divide_image_into_blocks(image, block_size):
@@ -108,13 +107,12 @@ def gen_codebook(image, block_size, codebook_size):
         for i in range(100): # for large numbers of codebook sizes 100 may be too large
             old_codebook = np.array(codebook)  # store the resulted centroids
             codebook = update_groups(codebook, blocks) # calculate nearest vector and average
-           # print(f"codebook size{len(codebook)} , iteration {i}") # for debugging
             if np.allclose(old_codebook, np.array(codebook) , atol=0.05):  # func that checks whether two NumPy arrays have approx. equal values or not
                 break
 
     return codebook
 
-#encoding only find the distance between each block and the centroids in codebook
+#encoding: find distance between the block and each centroid to can assign its index which will be converted to binary in the compressed image
 def encoding(image , block_size , codebook):
     blocks = divide_image_into_blocks(image, block_size)
     indices = []
