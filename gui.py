@@ -38,7 +38,7 @@ if option == "Compression":
        #  call encoding functions here :
        codebook = gen_codebook(padded_image , block_size ,  codebook_size) #compression logic
 
-       indices = encoding(image , block_size , codebook) # encoding the codebook => each block replaced by index
+       indices = encoding(padded_image , block_size , codebook) # encoding the codebook => each block replaced by index
        write_codebook(codebook , "Output/codebook.bin")
        binary_stream = save_compressed_image(indices , codebook_size , image.size ,padded_image.size ,old_mode,"Output/compressed.bin")
 
@@ -47,6 +47,9 @@ if option == "Compression":
 
            # write binary stream for quick overview
            st.write("Binary Stream: ", binary_stream)
+
+           ratio = calculate_compression_ratio(image.size, "Output/compressed.bin", "Output/codebook.bin")
+           st.write("Compression Ratio: ", round(ratio, 2))
 
            # save data for download buttons
            with open("Output/compressed.bin", "rb") as file:
@@ -66,16 +69,20 @@ if option == "Compression":
 
 
 
-
-
 elif option == "Decompression" :
 
-    compressed_image = st.file_uploader("Choose the file of Compressed/Binary Stream of Image:"
-                                        , type=["txt", "bin"])
-    codebook_file = st.file_uploader("Choose the file of the Codebook:"
-                                     , type= ["txt", "bin"])
+    compressed_image = st.file_uploader("Choose the file of Compressed/Binary Stream of Image:" , type=["txt", "bin"])
+    
+    codebook_file = st.file_uploader("Choose the file of the Codebook:" , type= ["txt", "bin"])
 
 
     if st.button("Decode Image"):
-        # call decoding functions here
-        i=0 # it has no meaning delete it after calling the decoding functions
+        if compressed_image is None or codebook_file is None:
+            st.error("Please upload both files")
+        else:
+            image = decompress(compressed_image.getvalue(), codebook_file.getvalue())
+            image.save("Output/decompressed.png")
+            st.success("Image decompressed successfully")
+            st.image(image, caption="Decompressed Image")
+            with open("Output/decompressed.png", "rb") as file:
+                st.download_button("Download the Decompressed Image", data=file.read(), file_name="decompressed.png")
