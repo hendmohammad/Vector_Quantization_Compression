@@ -1,5 +1,5 @@
 import numpy as np
-import math
+from math import *
 
 
 
@@ -8,7 +8,7 @@ def divide_image_into_blocks(image, block_size):
     image_array = np.array(image)  # image now is a 2D array (rows and columns)
     blocks = []
     height, width = image_array.shape  # image_array.shape returns a tuple first is the height and the second is the width
-    block_size = int(round(math.sqrt(block_size))) # if the block_size not perfect square so we need to round it
+    block_size = int(round(sqrt(block_size))) # if the block_size not perfect square so we need to round it
     #without round : blocksize = 24 =>int(sqrt(blocksize)= 4 , but with round =>int(round(sqrt(blocksize))) = 5
     for row in range(0, height, block_size):  # iterate on the rows
         for col in range(0, width, block_size):  # iterate on the columns
@@ -46,8 +46,8 @@ def splitting(block):  # block is the centroid to split
                 sec_split[i, j] = block[i, j] + 1  # if int, add/subtract 1 from the original value
 
             else:  # 10.5 >> not integer
-                first_split[i, j] = math.floor(block[i, j])
-                sec_split[i, j] = math.ceil(block[i, j])
+                first_split[i, j] = floor(block[i, j])
+                sec_split[i, j] = ceil(block[i, j])
 
     return first_split, sec_split
 
@@ -124,3 +124,18 @@ def encoding(image , block_size , codebook):
         indices.append(int(np.argmin(distances)))
 
     return indices
+
+def calculate_compression_ratio(image, block_size, codebook_size):
+        original_size = image.size[0] * image.size[1]
+
+        number_of_blocks = original_size // block_size
+
+        number_of_bits = max(1, ceil(log2(codebook_size)))
+
+        label_size = number_of_bits * number_of_blocks
+
+        compressed_size = codebook_size + label_size
+
+        compression_ratio = original_size / compressed_size
+
+        return compression_ratio
