@@ -35,11 +35,11 @@ def load_image(image_name):    #will be replaced after implementing the GUI
     #open image and check its mode and size
     image = Image.open("Input/"+image_name)
     # this algorithm only deals with gray scale images ,so if the image.mode != L (grayscale) convert it to grayscale
-    old_mode = image.mode
+
     if image.mode != "L":
         image = image.convert('L')
     image= image.resize((512,512)) #for quick outputs , it will be deleted before submission as it has no effect on the logic
-    return image , old_mode
+    return image
 
 def write_codebook(codebook , file_name):
     with open(file_name , "wb") as file:
@@ -50,9 +50,8 @@ def write_codebook(codebook , file_name):
             pixel = np.round(centroid).astype(np.uint8) #uint8 is unsigned 8-bit integer :whole numbers from 0 : 255
             file.write(pixel.tobytes()) #convert each pixel to one byte (pixel value is in 0 : 255 )
 
-def save_compressed_image(indices , codebook_size , original_size ,padded_size,old_mode , file_name):
+def save_compressed_image(indices , codebook_size , original_size ,padded_size , file_name):
 
-    encoded_mode = old_mode.encode("ascii")
     bits_per_index = max(1, ceil(log2(codebook_size)))
     bits = ""
     for index in indices:
@@ -66,11 +65,11 @@ def save_compressed_image(indices , codebook_size , original_size ,padded_size,o
         data.append(int(bits[i:i+8], 2))
 
     with open(file_name , "wb") as file:
-        file.write(struct.pack("<HHHHBB" , original_size[0] , original_size[1] , padded_size[0] , padded_size[1] , bits_per_index,len(encoded_mode)))
+        file.write(struct.pack("<HHHHB" , original_size[0] , original_size[1] , padded_size[0] , padded_size[1] , bits_per_index,))
         # "<" => little endian the least significant byte is stored first
         # "H" unsigned integer in 2 byte , its number indicates the number of values
         # "B" unsigned integer in 1 byte
-        file.write(encoded_mode)
+
         file.write(data)
 
     return bits # to write the binary stream in the gui , can be deleted as it does not affect the logic
@@ -78,18 +77,3 @@ def save_compressed_image(indices , codebook_size , original_size ,padded_size,o
 
 #test write files and save them to use as input in decompression
 #should be deleted before submission
-
-block_size = 64
-codebook_size = 16
-
-image, old_mode = load_image("image1.jpg")
-original_size = image.size             # before padding
-image = check_padding(image, block_size)
-padded_size = image.size               # after padding
-
-codebook = gen_codebook(image, block_size, codebook_size)
-indices = encoding(image, block_size, codebook)
-
-write_codebook(codebook, "Output/codebook.bin")
-data = save_compressed_image(indices, codebook_size, original_size, padded_size, old_mode,"Output/compressed.bin")
-print(data)
